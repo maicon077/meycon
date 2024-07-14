@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tulio Açaí Delivery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #4B0082;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            color: #000;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4B0082;
+            text-align: center;
+        }
+        h2 {
+            color: #4B0082;
+            border-bottom: 2px solid #4B0082;
+            padding-bottom: 5px;
+        }
+        label {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        input[type="checkbox"], input[type="radio"] {
+            margin-right: 10px;
+        }
+        select, input[type="text"], input[type="number"], button {
+            width: 100%;
+            padding: 7px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        button {
+            background-color: #4B0082;
+            color: #fff;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #3A0068;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        .icons {
+            margin-right: 10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #4B0082;
+            padding: 5px;
+        }
+        #total {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+    <script>
+        function limitarAcompanhamentos(tamanho, limite) {
+            const checkboxes = document.querySelectorAll(`input[name='acompanhamentos_gratis[${tamanho}][]']`);
+            let checkedCount = 0;
+
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    checkedCount = Array.from(checkboxes).filter(i => i.checked).length;
+                    if (checkedCount > limite) {
+                        alert(`Você pode selecionar no máximo ${limite} acompanhamentos grátis para ${tamanho}.`);
+                        checkbox.checked = false; // Desmarca o último checkbox
+                    }
+                });
+            });
+        }
+
+        function mostrarAcompanhamentos() {
+            const tamanho = document.querySelector('input[name="tamanho"]:checked');
+            if (tamanho) {
+                const valorTamanho = tamanho.value;
+                document.querySelectorAll('.opcoes').forEach(div => div.style.display = 'none');
+                document.getElementById(`opcoes-${valorTamanho}`).style.display = 'block';
+                limitarAcompanhamentos(valorTamanho, valorTamanho === '200ml' ? 3 : valorTamanho === '300ml' ? 4 : valorTamanho === '500ml' ? 5 : 6);
+            }
+        }
+
+        function calcularTotal() {
+            let total = 0;
+            const frete = 5.00;
+
+            // Tamanhos e preços
+            const precos = {
+                "200ml": 13.00,
+                "300ml": 16.00,
+                "500ml": 21.99,
+                "700ml": 33.99
+            };
+
+            // Calcular total por tamanho
+            for (const [tamanho, valor] of Object.entries(precos)) {
+                const quantidade = document.querySelector(`input[name="quantidade[${tamanho}]"]`).value;
+                total += valor * quantidade;
+            }
+
+            // Adicionar adicionais pagos
+            const adicionais = document.querySelectorAll('input[name="adicionais[]"]:checked');
+            adicionais.forEach(adicional => {
+                const preco = parseFloat(adicional.value.match(/R\$\s*([\d.,]+)/)[1].replace(',', '.'));
+                total += preco;
+            });
+
+            total += frete; // Adiciona o frete
+            document.getElementById('total').textContent = `Total: R$ ${total.toFixed(2)}`;
+        }
+
+        window.onload = function() {
+            mostrarAcompanhamentos();
+            document.querySelectorAll('input[name="tamanho"]').forEach(radio => {
+                radio.addEventListener('change', mostrarAcompanhamentos);
+            });
+            document.querySelectorAll('input[name="quantidade\\[\\w+ml\\]"]').forEach(input => {
+                input.addEventListener('input', calcularTotal);
+            });
+            document.querySelectorAll('input[name="adicionais[]"]').forEach(checkbox => {
+                checkbox.addEventListener('change', calcularTotal);
+            });
+        };
+
+        function copyToClipboard(field) {
+            const pixInput = document.querySelector(`input[name="${field}"]`);
+            pixInput.select();
+            document.execCommand('copy');
+            alert('Chave PIX copiada para a área de transferência!');
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1><img src="https://i.postimg.cc/d0FQ3NVk/Design-sem-nome-4.png" alt="Tulio Açaí Delivery" style="max-width: 70%; height: auto;"></h1>
+        <p style="text-align: center;">Horário de funcionamento de terça a domingo das 15:00 às 23:00 horas</p>
+        <form action="process.php" method="post">
+            <h2>Escolha o Tamanho</h2>
+            <label><input type="radio" name="tamanho" value="200ml" required> 200ml - R$13,00</label>
+            <input type="number" name="quantidade[200ml]" min="0" value="0" style="width: 50px; margin-left: 10px;" onchange="calcularTotal()"> Quantidade<br>
+            <label><input type="radio" name="tamanho" value="300ml"> 300ml - R$16,00</label>
+            <input type="number" name="quantidade[300ml]" min="0" value="0" style="width: 50px; margin-left: 10px;" onchange="calcularTotal()"> Quantidade<br>
+            <label><input type="radio" name="tamanho" value="500ml"> 500ml - R$21,99</label>
+            <input type="number" name="quantidade[500ml]" min="0" value="0" style="width: 50px; margin-left: 10px;" onchange="calcularTotal()"> Quantidade<br>
+            <label><input type="radio" name="tamanho" value="700ml"> 700ml - R$33,99</label>
+            <input type="number" name="quantidade[700ml]" min="0" value="0" style="width: 50px; margin-left: 10px;" onchange="calcularTotal()"> Quantidade<br>
+<!-- Acompanhamentos -->
+            <div id="opcoes-200ml" class="opcoes" style="display: none;">
+                <h3>Acompanhamentos Grátis (3 máximo)</h3>
+                <div id="acompanhamentos-gratis-200ml">
+                    <?php
+                    $acompanhamentos_gratis = [
+                        "Morango" => "https://img.freepik.com/fotos-gratis/baga-de-morango-levitando-em-um-fundo-branco_485709-57.jpg?size=338&ext=jpg&ga=GA1.1.2008272138.1720483200&semt=ais_hybrid",
+                        "Uva" => "https://www.proativaalimentos.com.br/image/cache/catalog/img_prod/uva[1]-1000x1000.jpg",
+                        "Kiwi" => "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0ldxcNoF34BRrO8zaBM7S4mcjRIXV3VF0gw&s",
+                        "Farinha Láctea" => "https://bretas.vtexassets.com/arquivos/ids/189162/6571c363558925a4e889936d.jpg?v=638375512065930000",
+                        "Granola" => "https://cdn.awsli.com.br/600x450/1889/1889425/produto/119351680/granola-com-castanhas-c832ea35.jpg",
+                        "Leite em Pó" => "https://superpao.vtexassets.com/unsafe/fit-in/720x720/center/middle/https%3A%2F%2Fsuperpao.vtexassets.com%2Farquivos%2Fids%2F441012%2FLeite-em-Po-Integral-Ninho-Lata-380g.jpg%3Fv%3D638481979560000000",
+                        "Paçoca" => "https://33443.cdn.simplo7.net/static/33443/sku/doces.html-pacoca-de-rolha-airon-1653688635805.jpg",
+                        "Amendoim de Chocolate" => "https://docemalu.vtexassets.com/arquivos/ids/5341583-800-auto?v=638421760580400000&width=800&height=auto&aspect=true",
+                        "Ovomaltine" => "https://media.soujusto.com.br/products/2017.jpg",
+                        "Disquete" => "https://www.bigfesta.com.br/resizer/view/373/373/false/true/26880.jpg",
+                        "Jujuba" => "https://loja.emporiodigrano.com.br/media/catalog/product/cache/ed4f1d3aeed72145d9f08d4b53f7ca4f/3/7/3779.png",
+                        "Choco Power" => "https://acdn.mitiendanube.com/stores/001/155/747/products/choco-power-boll1-d1ff481ac6362241fa15898053493346-640-0.jpg",
+                        "Farinha Tapioca" => "https://a-static.mlcdn.com.br/450x450/farinha-de-tapioca-granulada-do-para-pacote-500g-1-litro-amazonative/acaicoffee-ocafedeacai/anftg1l520g/68e2c5fb2a99089bdcfdf32f31362c06.jpeg",
+                        "Leite Condensado" => "https://p2.trrsf.com/image/fget/cf/1200/900/middle/images.terra.com/2022/08/04/238851866-leite-condensado-caseiro-768x512.jpg",
+                        "Bis" => "https://images.tcdn.com.br/img/img_prod/638868/bis_chocolate_branco_lacta_caixa_com_16_unidades_100_8g_1773_1_119abf71c6b6e5da1faecb29d952d4cc.jpg",
+                        "Banana" => "https://longevidadesaudavel.com.br/wp-content/uploads/2023/08/5.png",
+                        "Amendoim Granulado" => "https://global.cdn.magazord.com.br/quintadoconfeiteiro/img/2022/07/produto/979/design-sem-nome-6.png?ims=600x600",
+                        "Cobertura Morango" => "https://docemalu.vtexassets.com/arquivos/ids/5348516/18123-1.jpg?v=638421941024630000",
+                        "Cobertura Chocolate" => "https://confeiteiro.agilecdn.com.br/10618.png",
+                        "Creme Ninho" => "https://cdn.aquelareceita.com.br/recipes/vlcsnap-2020-09-17-09h57m39s458FB-1641924679701.png"
+                    ];
+
+                    foreach ($acompanhamentos_gratis as $acompanhamento => $imagem) {
+                        echo "<label><img src='$imagem' alt='$acompanhamento' class='icons'><input type='checkbox' name='acompanhamentos_gratis[200ml][]' value='$acompanhamento'> $acompanhamento</label><br>";
+                    }
+                    ?>
+                </div>
+                <h3>Acompanhamentos Pagos</h3>
+                <?php
+                $adicionais_pagos = [
+                    "Creme de Avelã" => ["imagem" => "https://images.tcdn.com.br/img/img_prod/677323/creme_de_avela_com_cacau_550g_vabene_5993_1_315a7377b049b7a13cf2e842cb5d08ab.png", "preco" => 3.00],
+                    "Nutella" => ["imagem" => "https://docemalu.vtexassets.com/arquivos/ids/5344487/100765-1.jpg?v=638421837900030000", "preco" => 4.00],
+                    "Ouro Branco" => ["imagem" => "https://cdn.awsli.com.br/800x800/298/298064/produto/13538196/29014d55a2.jpg", "preco" => 3.00]
+                ];
+
+                foreach ($adicionais_pagos as $adicional => $detalhes) {
+                    echo "<label><img src='{$detalhes['imagem']}' alt='$adicional' class='icons'><input type='checkbox' name='adicionais[]' value='$adicional (R$ {$detalhes['preco']})'> $adicional (R$ {$detalhes['preco']})</label><br>";
+                }
+                ?>
+            </div>
+
+            <!-- 300ml -->
+            <div id="opcoes-300ml" class="opcoes" style="display: none;">
+                <h3>Acompanhamentos Grátis (4 máximo)</h3>
+                <div id="acompanhamentos-gratis-300ml">
+                    <?php
+                    foreach ($acompanhamentos_gratis as $acompanhamento => $imagem) {
+                        echo "<label><img src='$imagem' alt='$acompanhamento' class='icons'><input type='checkbox' name='acompanhamentos_gratis[300ml][]' value='$acompanhamento'> $acompanhamento</label><br>";
+                    }
+                    ?>
+                </div>
+                <h3>Acompanhamentos Pagos</h3>
+                <?php
+                foreach ($adicionais_pagos as $adicional => $detalhes) {
+                    echo "<label><img src='{$detalhes['imagem']}' alt='$adicional' class='icons'><input type='checkbox' name='adicionais[]' value='$adicional (R$ {$detalhes['preco']})'> $adicional (R$ {$detalhes['preco']})</label><br>";
+                }
+                ?>
+            </div>
+
+            <!-- 500ml -->
+            <div id="opcoes-500ml" class="opcoes" style="display: none;">
+                <h3>Acompanhamentos Grátis (5 máximo)</h3>
+                <div id="acompanhamentos-gratis-500ml">
+                    <?php
+                    foreach ($acompanhamentos_gratis as $acompanhamento => $imagem) {
+                        echo "<label><img src='$imagem' alt='$acompanhamento' class='icons'><input type='checkbox' name='acompanhamentos_gratis[500ml][]' value='$acompanhamento'> $acompanhamento</label><br>";
+                    }
+                    ?>
+                </div>
+                <h3>Acompanhamentos Pagos</h3>
+                <?php
+                foreach ($adicionais_pagos as $adicional => $detalhes) {
+                    echo "<label><img src='{$detalhes['imagem']}' alt='$adicional' class='icons'><input type='checkbox' name='adicionais[]' value='$adicional (R$ {$detalhes['preco']})'> $adicional (R$ {$detalhes['preco']})</label><br>";
+                }
+                ?>
+            </div>
+
+            <!-- 700ml -->
+            <div id="opcoes-700ml" class="opcoes" style="display: none;">
+                <h3>Acompanhamentos Grátis (6 máximo)</h3>
+                <div id="acompanhamentos-gratis-700ml">
+                    <?php
+                    foreach ($acompanhamentos_gratis as $acompanhamento => $imagem) {
+                        echo "<label><img src='$imagem' alt='$acompanhamento' class='icons'><input type='checkbox' name='acompanhamentos_gratis[700ml][]' value='$acompanhamento'> $acompanhamento</label><br>";
+                    }
+                    ?>
+                </div>
+                 </div>
+            </label><br>
+            <h2 id="total">Total: R$ 0.00</h2>
+            <h2>Formas de Pagamento</h2>
+            <label><input type="radio" name="pagamento" value="Dinheiro" required> Dinheiro</label><br>
+            <label><input type="radio" name="pagamento" value="Pix"> PIX</label>
+            <input type="text" name="pix" placeholder="Chave PIX" value="seu_pix_aqui" readonly>
+            <button type="button" onclick="copyToClipboard('pix')">Copiar Chave PIX</button><br>
+            <label><input type="radio" name="pagamento" value="Cartão"> Cartão</label><br>
+            <button type="submit">Finalizar Pedido</button>
+        </form>
+    </div>
+</body>
+</html>
